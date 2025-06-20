@@ -1,0 +1,27 @@
+### Register
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "email": "testuser@gmail.com",
+  "password": "123456toni"
+}
+
+###
+
+### Login
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@gmail.com",
+  "password": "123456toni"
+}
+
+###
+
+### Refresh Access Token
+# login qilgandan keyin olingan refresh tokenni bu yerga yozing
+GET http://localhost:3000/auth/refresh
+Authorization: Bearer {{"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOnsiaWQiOjEsInJvbGUiOiJVU0VSIiwiZW1haWwiOiJ0ZXN0dXNlckBnbWFpbC5jb20ifSwiaWF0IjoxNzUwMzg2NzY5LCJleHAiOjE3NTA5OTE1Njl9.VX1yvU7DZ_mOyD734dcb6895HtAOWUNQxnCkjixzoFQ"}}
