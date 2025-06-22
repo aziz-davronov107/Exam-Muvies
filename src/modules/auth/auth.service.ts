@@ -13,12 +13,14 @@ import {
   RegisterResponse,
 } from 'src/core/types/auth.interface';
 import bcrypt from 'bcrypt';
+import { MailerService } from 'src/common/mailer/mailer.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User) private userModel: typeof User,
     private jwtService: JwtService,
+    private mailerService: MailerService,
   ) {}
 
   async getToken(id: number, IsRefreshToken: boolean) {
@@ -31,7 +33,7 @@ export class AuthService {
         access_token: await this.jwtService.signAsync({ sub: id }),
         refresh_token: await this.jwtService.signAsync(
           { sub: id },
-          JwtSecret.getRefreshOptions(),
+          JwtSecret.getRefreshOptions()
         ),
       };
     }
@@ -45,6 +47,8 @@ export class AuthService {
     });
 
     if (user) throw new ConflictException('User already exists');
+
+    await this.mailerService.sendMailer({ to: payload.email });
 
     let hash = await bcrypt.hash(payload.password, 10);
     let data = await this.userModel.create({ ...payload, password: hash });
@@ -63,11 +67,10 @@ export class AuthService {
       where: { email: payload.email },
     });
 
-    if (!user) throw new ConflictException('User not already exists');
+    if (!user) throw new ConflictException('User does not exist');
     let { id, email, password, role } = user.get({ plain: true });
 
     let hash = await bcrypt.compare(payload.password, password);
-    console.log(payload.password, hash);
 
     if (!hash) throw new ConflictException('Password is incorrect');
 

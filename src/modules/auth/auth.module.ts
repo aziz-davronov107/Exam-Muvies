@@ -14,7 +14,7 @@ import { JwtRefreshStrategy } from 'src/core/guards/jwt_refresh_strategy';
     SequelizeModule.forFeature([User]),
     JwtModule.register(JwtSecret.getAccessOptions()),
   ],
-  providers: [AuthService, JwtAccessStrategy, JwtRefreshStrategy],
+  providers: [AuthService,JwtRefreshStrategy,JwtAccessStrategy],
   controllers: [AuthController],
 })
 export class AuthModule {}

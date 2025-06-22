@@ -13,17 +13,14 @@ export class JwtRefreshStrategy extends PassportStrategy(
   constructor(@InjectModel(User) private userModel: typeof User) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
-      secretOrKey: JwtSecret.getAccessSecret(),
+      secretOrKey: JwtSecret.getRefreshSecret(),
     });
   }
 
   async validate(payload: any) {
-    const user = await this.userModel.findByPk(payload.sub?.id || payload.sub);
+    const user = await this.userModel.findByPk(payload.sub);
 
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    }
+    if (!user) throw new UnauthorizedException('User does not exist');
 
     return user;
   }
