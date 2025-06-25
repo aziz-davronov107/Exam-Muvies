@@ -4,6 +4,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User } from './common/models/user.models';
 import { AuthModule } from './modules/auth/auth.module';
 import { MailerModule } from './common/mailer/mailer.module';
+import { RedisModule } from './common/redis/redis.module';
+
 
 @Module({
   imports: [
@@ -25,6 +27,7 @@ import { MailerModule } from './common/mailer/mailer.module';
     }),
     AuthModule,
     MailerModule,
+    RedisModule,
   ],
 })
 export class AppModule {}

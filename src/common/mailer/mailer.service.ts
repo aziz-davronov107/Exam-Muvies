@@ -11,7 +11,7 @@ export class MailerService {
       subject: 'Enter this code!',
       template: 'index',
       context: {
-        code: Math.floor(100000 + Math.random() * 900000).toString(),
+        code: options.code,
       },
     });
   }

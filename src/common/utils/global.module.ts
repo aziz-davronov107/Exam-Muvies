@@ -3,7 +3,10 @@ import { PassportModule } from '@nestjs/passport';
 
 @Global()
 @Module({
-  imports: [PassportModule.register({ defaultStrategy: 'jwt' })],
+  imports: [
+    PassportModule.register({ defaultStrategy: 'jwt' })
+
+  ],
   exports: [PassportModule],
 })
 export class GlobalModule {}

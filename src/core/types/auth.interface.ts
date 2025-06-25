@@ -35,3 +35,13 @@ export interface RefreshTokenPayload
 }
 
 export interface JwtPayload extends RefreshTokenPayload {}
+
+
+export interface VerifyPayload {
+  email: string;
+  code: number;
+  type: 'register' | 'forgot';
+  newPassword?: string;
+}
+
+export interface ForgotPayload extends Omit<VerifyPayload,'code'|'type'|'newPassword'>{}

@@ -1,9 +1,10 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from 'src/common/models/user.models';
 import { JwtSecret } from 'src/common/utils/jwt.secret';
 import {
+  ForgotPayload,
   JwtPayload,
   LoginPayload,
   LoginResponse,
@@ -11,16 +12,22 @@ import {
   RefreshTokenResponse,
   RegisterPayload,
   RegisterResponse,
+  VerifyPayload,
 } from 'src/core/types/auth.interface';
 import bcrypt from 'bcrypt';
 import { MailerService } from 'src/common/mailer/mailer.service';
+import { RedisService } from 'src/common/redis/redis.service';
+import { customAlphabet } from 'nanoid';
 
 @Injectable()
 export class AuthService {
+  generateCode = customAlphabet('1234567890',6)
+
   constructor(
     @InjectModel(User) private userModel: typeof User,
     private jwtService: JwtService,
     private mailerService: MailerService,
+    private redisService: RedisService
   ) {}
 
   async getToken(id: number, IsRefreshToken: boolean) {
@@ -41,27 +48,85 @@ export class AuthService {
 
   async register(
     payload: Required<RegisterPayload>,
-  ): Promise<RegisterResponse> {
+  ){
     let user = await this.userModel.findOne({
-      where: { username: payload.username },
+      where: { username: payload.email },
     });
 
     if (user) throw new ConflictException('User already exists');
+    let code = this.generateCode();
 
-    await this.mailerService.sendMailer({ to: payload.email });
+    await this.mailerService.sendMailer({ to: payload.email ,code});
 
-    let hash = await bcrypt.hash(payload.password, 10);
-    let data = await this.userModel.create({ ...payload, password: hash });
-    let { id, username, email, role } = data.get({ plain: true });
-
-    let { access_token, refresh_token } = await this.getToken(id, false);
-
+    await this.redisService.set(`register:${payload.email}`,{...payload,code})
+    
     return {
-      data: { id, username, email, role },
-      access_token,
-      refresh_token: refresh_token ? refresh_token : '',
-    };
+      message: `Verification code sent to ${payload.email}`
+    }
   }
+
+  async forgutPassword(payload: ForgotPayload){
+    let user = await this.userModel.findOne({
+      where: { username: payload.email },
+    });
+
+    if (user) throw new ConflictException('User already exists');
+    let code = this.generateCode();
+
+    await this.mailerService.sendMailer({ to: payload.email ,code});
+
+    await this.redisService.set(`forgot:${payload.email}`,{code})
+    
+    return {
+      message: `ForgotPassword code sent to ${payload.email}`
+    }
+  }
+  async verify(
+    payload: VerifyPayload,
+  ){
+    let redisKey = `${payload.type}: ${payload.email}`
+    let data = await this.redisService.get(redisKey)
+    
+    if (!data || data.code != payload.code) throw new BadRequestException('Otp Expire or Password incorrect');
+
+    if(payload.type == 'register'){
+
+      let hash = await bcrypt.hash(data.password,10);
+      delete data.code
+      data.password = hash
+      
+
+      const newUser =  await this.userModel.create(data);
+
+      await this.redisService.del(redisKey);
+
+      let { access_token, refresh_token } = await this.getToken(newUser.dataValues.id, false);
+      
+      return {
+        access_token,
+        refresh_token : refresh_token ? refresh_token : '',
+      }
+    }
+    if(payload.type == 'forgot' && payload.newPassword){
+      const user = await this.userModel.findOne({ where: { email:payload.email } });
+
+      if (!user) {
+        throw new BadRequestException('User not found');
+      }
+
+      let hash = await bcrypt.hash(payload.newPassword,10);
+
+      user.password = hash;
+      await user.save();
+      await this.redisService.del(redisKey);
+      
+      return { message: 'Password successfully reset' };
+    }
+    
+    throw new BadRequestException('New password is required for password reset');
+  }
+
+
   async login(payload: Required<LoginPayload>): Promise<LoginResponse> {
     let user = await this.userModel.findOne({
       where: { email: payload.email },
