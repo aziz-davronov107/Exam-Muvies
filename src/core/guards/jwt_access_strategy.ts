@@ -2,8 +2,9 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { InjectModel } from '@nestjs/sequelize';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { User } from 'src/common/models/user.models';
 import { JwtSecret } from 'src/common/utils/jwt.secret';
+import { User } from '../models/user.model';
+import { Request } from 'express';
 
 @Injectable()
 export class JwtAccessStrategy extends PassportStrategy(
@@ -12,7 +13,11 @@ export class JwtAccessStrategy extends PassportStrategy(
 ) {
   constructor(@InjectModel(User) private userModel: typeof User) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req: Request) => {
+          return req?.cookies['access_token'];
+        },
+      ]),
       secretOrKey: JwtSecret.getAccessSecret(),
     });
   }

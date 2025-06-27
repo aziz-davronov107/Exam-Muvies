@@ -10,14 +10,14 @@ export class JwtSecret {
   static getAccessOptions() {
     return {
       secret: this.getAccessSecret(),
-      signOptions: { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m' }
+      signOptions: { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m' },
     };
   }
 
   static getRefreshOptions() {
     return {
       secret: this.getRefreshSecret(),
-      expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d'
+      expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
     };
   }
 }

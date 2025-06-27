@@ -1,7 +1,10 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
-import { User } from 'src/common/models/user.models';
 import { JwtSecret } from 'src/common/utils/jwt.secret';
 import {
   ForgotPayload,
@@ -18,16 +21,17 @@ import bcrypt from 'bcrypt';
 import { MailerService } from 'src/common/mailer/mailer.service';
 import { RedisService } from 'src/common/redis/redis.service';
 import { customAlphabet } from 'nanoid';
+import { User } from 'src/core/models/user.model';
 
 @Injectable()
 export class AuthService {
-  generateCode = customAlphabet('1234567890',6)
+  generateCode = customAlphabet('1234567890', 6);
 
   constructor(
     @InjectModel(User) private userModel: typeof User,
     private jwtService: JwtService,
     private mailerService: MailerService,
-    private redisService: RedisService
+    private redisService: RedisService,
   ) {}
 
   async getToken(id: number, IsRefreshToken: boolean) {
@@ -40,15 +44,13 @@ export class AuthService {
         access_token: await this.jwtService.signAsync({ sub: id }),
         refresh_token: await this.jwtService.signAsync(
           { sub: id },
-          JwtSecret.getRefreshOptions()
+          JwtSecret.getRefreshOptions(),
         ),
       };
     }
   }
 
-  async register(
-    payload: Required<RegisterPayload>,
-  ){
+  async register(payload: Required<RegisterPayload>) {
     let user = await this.userModel.findOne({
       where: { username: payload.email },
     });
@@ -56,16 +58,19 @@ export class AuthService {
     if (user) throw new ConflictException('User already exists');
     let code = this.generateCode();
 
-    await this.mailerService.sendMailer({ to: payload.email ,code});
+    await this.mailerService.sendMailer({ to: payload.email, code });
 
-    await this.redisService.set(`register:${payload.email}`,{...payload,code})
-    
+    await this.redisService.set(`register:${payload.email}`, {
+      ...payload,
+      code,
+    });
+
     return {
-      message: `Verification code sent to ${payload.email}`
-    }
+      message: `Verification code sent to ${payload.email}`,
+    };
   }
 
-  async forgutPassword(payload: ForgotPayload){
+  async forgutPassword(payload: ForgotPayload) {
     let user = await this.userModel.findOne({
       where: { username: payload.email },
     });
@@ -73,59 +78,62 @@ export class AuthService {
     if (user) throw new ConflictException('User already exists');
     let code = this.generateCode();
 
-    await this.mailerService.sendMailer({ to: payload.email ,code});
+    await this.mailerService.sendMailer({ to: payload.email, code });
 
-    await this.redisService.set(`forgot:${payload.email}`,{code})
-    
+    await this.redisService.set(`forgot:${payload.email}`, { code });
+
     return {
-      message: `ForgotPassword code sent to ${payload.email}`
-    }
+      message: `ForgotPassword code sent to ${payload.email}`,
+    };
   }
-  async verify(
-    payload: VerifyPayload,
-  ){
-    let redisKey = `${payload.type}: ${payload.email}`
-    let data = await this.redisService.get(redisKey)
-    
-    if (!data || data.code != payload.code) throw new BadRequestException('Otp Expire or Password incorrect');
+  async verify(payload: VerifyPayload) {
+    let redisKey = `${payload.type}: ${payload.email}`;
+    let data = await this.redisService.get(redisKey);
 
-    if(payload.type == 'register'){
+    if (!data || data.code != payload.code)
+      throw new BadRequestException('Otp Expire or Password incorrect');
 
-      let hash = await bcrypt.hash(data.password,10);
-      delete data.code
-      data.password = hash
-      
+    if (payload.type == 'register') {
+      let hash = await bcrypt.hash(data.password, 10);
+      delete data.code;
+      data.password = hash;
 
-      const newUser =  await this.userModel.create(data);
+      const newUser = await this.userModel.create(data);
 
       await this.redisService.del(redisKey);
 
-      let { access_token, refresh_token } = await this.getToken(newUser.dataValues.id, false);
-      
+      let { access_token, refresh_token } = await this.getToken(
+        newUser.dataValues.user_id,
+        false,
+      );
+
       return {
         access_token,
-        refresh_token : refresh_token ? refresh_token : '',
-      }
+        refresh_token: refresh_token ? refresh_token : '',
+      };
     }
-    if(payload.type == 'forgot' && payload.newPassword){
-      const user = await this.userModel.findOne({ where: { email:payload.email } });
+    if (payload.type == 'forgot' && payload.newPassword) {
+      const user = await this.userModel.findOne({
+        where: { email: payload.email },
+      });
 
       if (!user) {
         throw new BadRequestException('User not found');
       }
 
-      let hash = await bcrypt.hash(payload.newPassword,10);
+      let hash = await bcrypt.hash(payload.newPassword, 10);
 
       user.password = hash;
       await user.save();
       await this.redisService.del(redisKey);
-      
+
       return { message: 'Password successfully reset' };
     }
-    
-    throw new BadRequestException('New password is required for password reset');
-  }
 
+    throw new BadRequestException(
+      'New password is required for password reset',
+    );
+  }
 
   async login(payload: Required<LoginPayload>): Promise<LoginResponse> {
     let user = await this.userModel.findOne({
@@ -133,13 +141,13 @@ export class AuthService {
     });
 
     if (!user) throw new ConflictException('User does not exist');
-    let { id, email, password, role } = user.get({ plain: true });
+    let { user_id, email, password, role } = user.get({ plain: true });
 
     let hash = await bcrypt.compare(payload.password, password);
 
     if (!hash) throw new ConflictException('Password is incorrect');
 
-    let { access_token, refresh_token } = await this.getToken(id, false);
+    let { access_token, refresh_token } = await this.getToken(user_id, false);
 
     return {
       access_token,

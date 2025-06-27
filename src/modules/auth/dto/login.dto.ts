@@ -9,11 +9,11 @@ import {
 } from 'class-validator';
 
 export class loginDto {
-  @ApiProperty({default:"testuser@gmail.com"})
+  @ApiProperty({ default: 'testuser@gmail.com' })
   @IsEmail()
   email: string;
 
-  @ApiProperty({default:"ali123"})
+  @ApiProperty({ default: 'ali123' })
   @IsNotEmpty()
   @MinLength(6)
   @Matches(/^[a-zA-Z0-9]{6,20}$/)

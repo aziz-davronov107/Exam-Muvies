@@ -14,12 +14,11 @@ import {
 } from 'class-validator';
 
 export class VerifyDto {
-
-  @ApiProperty({default:"testuser@gmail.com"})
+  @ApiProperty({ default: 'testuser@gmail.com' })
   @IsEmail()
   email: string;
 
-  @ApiProperty({default:"ali123"})
+  @ApiProperty({ default: 'ali123' })
   @IsNotEmpty()
   @IsNumber()
   @Min(100000)
@@ -36,4 +35,3 @@ export class VerifyDto {
   @MaxLength(20)
   newPassword?: string;
 }
-
