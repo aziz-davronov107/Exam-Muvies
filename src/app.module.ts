@@ -22,6 +22,8 @@ import { UserModule } from './modules/user/user.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { RoleGuard } from './core/guards/role.guards';
 import { MovieModule } from './modules/movie/movie.module';
+import { SeederModule } from './common/seeders/seeder.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ envFilePath: '.env', isGlobal: true }),
@@ -31,7 +33,10 @@ import { MovieModule } from './modules/movie/movie.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         dialect: configService.get('DB_DIALECT'),
-        url: configService.get('DB_URL'),
+        database: configService.get('DB_DATABASE'),
+        username: configService.get('DB_USERNAME'),
+        password: configService.get('DB_PASSWORD'),
+        port: configService.get('DB_PORT'),
         models: [
           User,
           Movie,
@@ -46,17 +51,20 @@ import { MovieModule } from './modules/movie/movie.module';
         ],
         autoLoadModels: true,
         synchronize: true,
+        logging: false,
       }),
     }),
     SequelizeModule.forFeature([User, Movie]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
 
+    SeederModule,
     AuthModule,
     MailerModule,
     UserModule,
     RedisModule,
     CategoriesModule,
     MovieModule,
+    SubscriptionsModule,
   ],
   providers: [
     JwtAccessStrategy,

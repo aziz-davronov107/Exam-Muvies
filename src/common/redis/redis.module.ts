@@ -10,14 +10,24 @@ import { createClient } from 'redis';
     {
       provide: 'REDIS_CLIENT',
       useFactory: async (configService: ConfigService) => {
-        const url = configService.get<string>('REDIS_URL');
-        const client = createClient({ url });
+        const host = configService.get<string>('REDIS_HOST');
+        const port = configService.get<string>('REDIS_PORT');
+        const password = configService.get<string>('REDIS_PASS');
+
+        const client = createClient({
+          socket: {
+            host,
+            port: Number(port),
+          },
+          password,
+        });
 
         client.on('error', (err) => {
           console.error('Redis Client Error', err);
         });
 
         await client.connect();
+        console.log('✅ Redis connected on', host + ':' + port);
         return client;
       },
       inject: [ConfigService],
