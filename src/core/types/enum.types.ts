@@ -38,3 +38,7 @@ export enum LANGUAGE {
   RU = 'RU',
   EN = 'EN',
 }
+export enum SUBSCRIPTION_TYPE {
+  FREE = 'FREE',
+  PREMIUM = 'PREMIUM',
+}

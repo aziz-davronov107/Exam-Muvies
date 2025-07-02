@@ -33,6 +33,9 @@ export class SubscriptionPlan extends Model {
   @Column({ type: DataType.BOOLEAN })
   is_active: boolean;
 
-  @HasMany(() => UserSubscription)
+  @HasMany(() => UserSubscription, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
   subscriptions: UserSubscription[];
 }

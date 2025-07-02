@@ -1,0 +1,12 @@
+###
+POST http://localhost:1170/user/Ping HTTP/1.1
+content-type: application/json
+
+{
+    "username": "yandiev",
+    "email": "azizdavronov2005@gmail.com",
+    "password": "yandiev12345"
+}
+
+###
+GET http://localhost:1170/user/Ping 

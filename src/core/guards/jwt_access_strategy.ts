@@ -23,7 +23,9 @@ export class JwtAccessStrategy extends PassportStrategy(
   }
 
   async validate(payload: any) {
-    const user = await this.userModel.findByPk(payload.sub);
+    console.log('ishaldi');
+
+    const user = await this.userModel.findByPk(payload.sub, { raw: true });
 
     if (!user) {
       throw new UnauthorizedException('User does not exist');

@@ -1,4 +1,12 @@
-import {Table, Column, Model, DataType, Default, Unique, HasMany} from 'sequelize-typescript';
+import {
+  Table,
+  Column,
+  Model,
+  DataType,
+  Default,
+  Unique,
+  HasMany,
+} from 'sequelize-typescript';
 import { UserSubscription } from './user-subscription.model';
 import { Favorite } from './favorite.model';
 import { Review } from './review.model';
@@ -6,51 +14,70 @@ import { WatchHistory } from './watch-history.model';
 import { Movie } from './movie.model';
 import { ROLES } from '../types/enum.types';
 
-
 @Table({ tableName: 'users' })
 export class User extends Model {
-  @Column({ type: DataType.UUID, primaryKey: true, defaultValue: DataType.UUIDV4 ,field: 'user_id'})
+  @Column({
+    type: DataType.UUID,
+    primaryKey: true,
+    defaultValue: DataType.UUIDV4,
+    field: 'user_id',
+  })
   user_id: string;
 
-  @Unique @Column({ type: DataType.STRING })
+  @Unique
+  @Column({ type: DataType.STRING })
   username: string;
 
-  @Unique @Column({ type: DataType.STRING })
+  @Unique
+  @Column({ type: DataType.STRING })
   email: string;
 
   @Column({ type: DataType.STRING })
   password: string;
 
-  @Default(ROLES.USER) @Column(DataType.ENUM(...Object.values(ROLES)))
+  @Default(ROLES.USER)
+  @Column(DataType.ENUM(...Object.values(ROLES)))
   role: ROLES;
 
-  @Column({ type: DataType.STRING })
+  @Column({ type: DataType.STRING, defaultValue: null })
   avatar_url: string;
 
-  @Column({ type: DataType.UUID })
-  profile_id: string;
-
-  @Column({ type: DataType.STRING })
+  @Column({ type: DataType.STRING, defaultValue: null })
   full_name: string;
 
-  @Column({ type: DataType.STRING })
+  @Column({ type: DataType.STRING, defaultValue: null })
   phone: string;
 
-  @Column({ type: DataType.STRING })
+  @Column({ type: DataType.STRING, defaultValue: null })
   country: string;
 
-  @HasMany(() => UserSubscription)
+  @HasMany(() => UserSubscription, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
   subscriptions: UserSubscription[];
 
-  @HasMany(() => Favorite)
+  @HasMany(() => Favorite, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
   favorites: Favorite[];
 
-  @HasMany(() => Review)
+  @HasMany(() => Review, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
   reviews: Review[];
 
-  @HasMany(() => WatchHistory)
+  @HasMany(() => WatchHistory, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
   watchHistory: WatchHistory[];
 
-  @HasMany(() => Movie)
+  @HasMany(() => Movie, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
   movies: Movie[];
 }

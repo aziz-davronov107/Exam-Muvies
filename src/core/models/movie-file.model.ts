@@ -23,6 +23,9 @@ export class MovieFile extends Model {
   @Column(DataType.UUID)
   movie_id: string;
 
+  @Column(DataType.STRING)
+  file_url: string;
+
   @Column(DataType.ENUM(...Object.values(MOVIE_QUALITY)))
   quality: MOVIE_QUALITY;
 

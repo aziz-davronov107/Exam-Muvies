@@ -6,7 +6,8 @@ import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.use(cookieParser);
+
+  app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -23,8 +24,8 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('v7/swagger', app, document);
-
-  await app.listen(process.env.PORT ?? 3000);
+  SwaggerModule.setup('/v7/swagger', app, document);
+  let port = process.env.PORT || 1170;
+  await app.listen(+port, '0.0.0.0');
 }
 bootstrap();

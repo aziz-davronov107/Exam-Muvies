@@ -17,15 +17,18 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { VerifyDto } from './dto/verify.dto';
 import { ForgotDto } from './dto/forgut-pasword.dto';
 import { Response } from 'express';
+import { Public } from 'src/core/decorators/public.decorators';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+  @Public()
   @Post('register')
   async register(@Body() payload: RegisterDto) {
     return await this.authService.register(payload);
   }
+  @Public()
   @Post('login')
   async login(
     @Body() payload: loginDto,
@@ -49,11 +52,12 @@ export class AuthController {
 
     return { message: 'Login Seccessfull ' };
   }
-
+  @Public()
   @Put('forgot-password')
   async forgutPassword(@Body() payload: ForgotDto) {
     return await this.authService.forgutPassword(payload);
   }
+  @Public()
   @Post('verify')
   async verify(
     @Body() payload: VerifyDto,
@@ -78,7 +82,9 @@ export class AuthController {
     }
     return resulst;
   }
+
   @UseGuards(AuthGuard('jwt-refresh'))
+  @Public()
   @Get('refresh')
   async refreshToken(
     @Req() req: Request,

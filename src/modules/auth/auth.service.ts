@@ -57,13 +57,15 @@ export class AuthService {
 
     if (user) throw new ConflictException('User already exists');
     let code = this.generateCode();
+    console.log('ishladi');
 
     await this.mailerService.sendMailer({ to: payload.email, code });
 
-    await this.redisService.set(`register:${payload.email}`, {
+    let redisKey = await this.redisService.set(`register:${payload.email}`, {
       ...payload,
       code,
     });
+    console.log(redisKey);
 
     return {
       message: `Verification code sent to ${payload.email}`,
@@ -87,7 +89,9 @@ export class AuthService {
     };
   }
   async verify(payload: VerifyPayload) {
-    let redisKey = `${payload.type}: ${payload.email}`;
+    let redisKey = `${payload.type}:${payload.email}`;
+    console.log(redisKey);
+
     let data = await this.redisService.get(redisKey);
 
     if (!data || data.code != payload.code)

@@ -50,6 +50,9 @@ export class UserSubscription extends Model {
   @BelongsTo(() => SubscriptionPlan)
   plan: SubscriptionPlan;
 
-  @HasMany(() => Payment)
+  @HasMany(() => Payment, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
   payments: Payment[];
 }

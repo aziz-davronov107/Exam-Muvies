@@ -5,9 +5,15 @@ import {
   DataType,
   ForeignKey,
   BelongsTo,
+  HasMany,
 } from 'sequelize-typescript';
 import { User } from './user.model';
 import { Category } from './category.model';
+import { Review } from './review.model';
+import { MovieFile } from './movie-file.model';
+import { Favorite } from './favorite.model';
+import { WatchHistory } from './watch-history.model';
+import { SUBSCRIPTION_TYPE } from '../types/enum.types';
 
 @Table({ tableName: 'movies' })
 export class Movie extends Model {
@@ -36,8 +42,19 @@ export class Movie extends Model {
   @Column({ type: DataType.STRING })
   poster_url: string;
 
-  @Column(DataType.DECIMAL(3, 1))
+  @Column({ type: DataType.DECIMAL(3, 1), defaultValue: null })
   rating: number;
+  @Column({
+    type: DataType.ENUM(...Object.values(SUBSCRIPTION_TYPE)),
+    defaultValue: SUBSCRIPTION_TYPE.FREE,
+  })
+  subscription_type: SUBSCRIPTION_TYPE;
+
+  @Column({
+    type: DataType.INTEGER,
+    defaultValue: 0,
+  })
+  view_count: number;
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
@@ -51,4 +68,16 @@ export class Movie extends Model {
 
   @BelongsTo(() => Category)
   category: Category;
+
+  @HasMany(() => Review, { onDelete: 'CASCADE', hooks: true })
+  reviews: Review[];
+
+  @HasMany(() => MovieFile, { onDelete: 'CASCADE', hooks: true })
+  movieFiles: MovieFile[];
+
+  @HasMany(() => Favorite, { onDelete: 'CASCADE', hooks: true })
+  favorites: Favorite[];
+
+  @HasMany(() => WatchHistory, { onDelete: 'CASCADE', hooks: true })
+  watchHistories: WatchHistory[];
 }

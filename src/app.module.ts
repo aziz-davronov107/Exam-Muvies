@@ -1,38 +1,39 @@
 import { Module } from '@nestjs/common';
-import { SequelizeModule } from '@nestjs/sequelize';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthModule } from './modules/auth/auth.module';
-import { MailerModule } from './common/mailer/mailer.module';
-import { RedisModule } from './common/redis/redis.module';
-import { User } from './core/models/user.model';
-import { GlobalModule } from './common/utils/global.module';
+import { PassportModule } from '@nestjs/passport';
+import { SequelizeModule } from '@nestjs/sequelize';
 import { APP_GUARD } from '@nestjs/core';
-import { Movie } from './core/models/movie.model';
-import { UserSubscription } from './core/models/user-subscription.model';
-import { MovieFile } from './core/models/movie-file.model';
-import { WatchHistory } from './core/models/watch-history.model';
-import { Category } from './core/models/category.model';
-import { Favorite } from './core/models/favorite.model';
-import { Payment } from './core/models/payment.model';
-import { Review } from './core/models/review.model';
-import { JwtAccessStrategy } from './core/guards/jwt_access_strategy';
-import { JwtAccessAuthGuard } from './core/guards/auth.guards';
-import { SubscriptionPlan } from './core/models/subscription-plan.model';
-
+import { JwtAccessStrategy } from 'src/core/guards/jwt_access_strategy';
+import { JwtAccessAuthGuard } from 'src/core/guards/auth.guards';
+import { AuthModule } from 'src/modules/auth/auth.module';
+import { MailerModule } from 'src/common/mailer/mailer.module';
+import { RedisModule } from 'src/common/redis/redis.module';
+import { User } from 'src/core/models/user.model';
+import { Movie } from 'src/core/models/movie.model';
+import { UserSubscription } from 'src/core/models/user-subscription.model';
+import { SubscriptionPlan } from 'src/core/models/subscription-plan.model';
+import { MovieFile } from 'src/core/models/movie-file.model';
+import { WatchHistory } from 'src/core/models/watch-history.model';
+import { Category } from 'src/core/models/category.model';
+import { Favorite } from 'src/core/models/favorite.model';
+import { Payment } from 'src/core/models/payment.model';
+import { Review } from 'src/core/models/review.model';
+import { UserModule } from './modules/user/user.module';
+import { CategoriesModule } from './modules/categories/categories.module';
+import { RoleGuard } from './core/guards/role.guards';
+import { MovieModule } from './modules/movie/movie.module';
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ envFilePath: '.env', isGlobal: true }),
+
     SequelizeModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         dialect: configService.get('DB_DIALECT'),
-        host: configService.get('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get('DB_USERNAME'),
-        password: configService.get('DB_PASSWORD'),
-        database: configService.get('DB_NAME'),
-        models: [ User,
+        url: configService.get('DB_URL'),
+        models: [
+          User,
           Movie,
           UserSubscription,
           SubscriptionPlan,
@@ -41,22 +42,32 @@ import { SubscriptionPlan } from './core/models/subscription-plan.model';
           Category,
           Favorite,
           Payment,
-          Review
+          Review,
         ],
         autoLoadModels: true,
         synchronize: true,
       }),
     }),
-    GlobalModule,
+    SequelizeModule.forFeature([User, Movie]),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+
     AuthModule,
     MailerModule,
+    UserModule,
     RedisModule,
+    CategoriesModule,
+    MovieModule,
   ],
   providers: [
     JwtAccessStrategy,
     {
       provide: APP_GUARD,
       useClass: JwtAccessAuthGuard,
+    },
+
+    {
+      provide: APP_GUARD,
+      useClass: RoleGuard,
     },
   ],
 })

@@ -23,6 +23,9 @@ export class Category extends Model {
   @Column(DataType.TEXT)
   description: string;
 
-  @HasMany(() => Movie)
+  @HasMany(() => Movie, {
+    onDelete: 'CASCADE',
+    hooks: true,
+  })
   movieCategories: Movie[];
 }
