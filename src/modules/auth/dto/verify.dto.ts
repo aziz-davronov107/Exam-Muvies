@@ -25,11 +25,12 @@ export class VerifyDto {
   @Max(999999)
   code: number;
 
+  @ApiProperty({ default: 'forgot'})
   @IsIn(['register', 'forgot'])
   type: 'register' | 'forgot';
 
   @IsOptional()
-  @IsNotEmpty()
+  @ApiProperty({ default: 'IsOptions olny type forgot'})
   @MinLength(6)
   @Matches(/^[a-zA-Z0-9]{6,20}$/)
   @MaxLength(20)
